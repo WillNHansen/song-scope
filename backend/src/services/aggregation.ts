@@ -15,39 +15,67 @@ export interface SmoothedPoint {
   ratingCount: number;
 }
 
-// Rebuild precomputed aggregation buckets for a song from raw interval ratings.
+// Rebuild precomputed aggregation buckets for a song.
+// A user's overall song rating acts as a base interval covering the full song,
+// overridden bucket-by-bucket by any specific interval ratings they've submitted.
 export async function recomputeAggregation(
   songId: string,
   bucketSizeMs = config.aggregation.defaultBucketSizeMs
 ): Promise<void> {
-  const ratings = await prisma.intervalRating.findMany({
-    where: { songId },
-    select: { startMs: true, endMs: true, rating: true },
-  });
+  const [song, songRatings, intervalRatings] = await Promise.all([
+    prisma.song.findUnique({ where: { id: songId }, select: { durationMs: true } }),
+    prisma.songRating.findMany({ where: { songId }, select: { userId: true, rating: true } }),
+    prisma.intervalRating.findMany({
+      where: { songId },
+      select: { userId: true, startMs: true, endMs: true, rating: true },
+    }),
+  ]);
 
-  if (ratings.length === 0) {
+  if (!song || (songRatings.length === 0 && intervalRatings.length === 0)) {
     await prisma.aggregatedMetric.deleteMany({ where: { songId, bucketSizeMs } });
     return;
   }
 
-  const maxMs = Math.max(...ratings.map((r) => r.endMs));
+  const durationMs = song.durationMs;
 
-  const bucketMap = new Map<number, { sum: number; count: number }>();
+  // Build per-user bucket contributions:
+  // 1. Song rating → base for all buckets across the full song
+  // 2. Interval ratings → override specific buckets
+  const userBuckets = new Map<string, Map<number, number>>();
 
-  for (const rating of ratings) {
-    const firstBucket = Math.floor(rating.startMs / bucketSizeMs) * bucketSizeMs;
-    const lastBucket = Math.floor((rating.endMs - 1) / bucketSizeMs) * bucketSizeMs;
+  for (const sr of songRatings) {
+    const userMap = new Map<number, number>();
+    for (let bucket = 0; bucket < durationMs; bucket += bucketSizeMs) {
+      userMap.set(bucket, sr.rating);
+    }
+    userBuckets.set(sr.userId, userMap);
+  }
 
+  for (const ir of intervalRatings) {
+    if (!userBuckets.has(ir.userId)) userBuckets.set(ir.userId, new Map());
+    const userMap = userBuckets.get(ir.userId)!;
+    const firstBucket = Math.floor(ir.startMs / bucketSizeMs) * bucketSizeMs;
+    const lastBucket = Math.floor((ir.endMs - 1) / bucketSizeMs) * bucketSizeMs;
     for (let bucket = firstBucket; bucket <= lastBucket; bucket += bucketSizeMs) {
+      userMap.set(bucket, ir.rating);
+    }
+  }
+
+  // Aggregate across all users per bucket
+  const bucketMap = new Map<number, { sum: number; count: number }>();
+  for (const userMap of userBuckets.values()) {
+    for (const [bucket, rating] of userMap) {
       const existing = bucketMap.get(bucket) ?? { sum: 0, count: 0 };
-      existing.sum += rating.rating;
+      existing.sum += rating;
       existing.count += 1;
       bucketMap.set(bucket, existing);
     }
   }
 
-  // Delete all existing buckets first so removed intervals don't leave stale data
+  // Delete all existing buckets first so removed ratings don't leave stale data
   await prisma.aggregatedMetric.deleteMany({ where: { songId, bucketSizeMs } });
+
+  if (bucketMap.size === 0) return;
 
   await prisma.$transaction(
     Array.from(bucketMap.entries()).map(([bucketMs, { sum, count }]) =>

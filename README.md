@@ -78,6 +78,36 @@ npm run dev:frontend # App on http://localhost:3000
 
 ---
 
+## Deployment
+
+The production app is deployed on **Railway** (backend + PostgreSQL) and **Vercel** (frontend).
+
+### Backend (Railway)
+1. Create a new Railway project, connect the GitHub repo
+2. Add a PostgreSQL plugin — Railway auto-sets `DATABASE_URL`
+3. Set environment variables:
+   ```
+   JWT_SECRET=<long random string>
+   SPOTIFY_CLIENT_ID=<from Spotify dashboard>
+   SPOTIFY_CLIENT_SECRET=<from Spotify dashboard>
+   NODE_ENV=production
+   FRONTEND_URL=https://your-vercel-url.vercel.app
+   PORT=4000
+   ```
+4. Railway builds via `npm run build` (runs `prisma generate && tsc`) and starts via `npm start` (runs `prisma db push` then `node dist/index.js`)
+
+### Frontend (Vercel)
+1. Import the repo into Vercel, set root directory to `frontend/`
+2. Add environment variable:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-railway-url.up.railway.app
+   ```
+3. Deploy — Vercel auto-deploys on every push to `main`
+
+After both are live, update `FRONTEND_URL` in Railway to the final Vercel URL so CORS is correctly scoped.
+
+---
+
 ## Project Structure
 
 ```

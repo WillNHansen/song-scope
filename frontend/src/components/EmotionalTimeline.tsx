@@ -75,7 +75,7 @@ function CustomXAxisTick({ x, y, payload }: { x?: number; y?: number; payload?: 
 
 interface ChartMouseState {
   isTooltipActive?: boolean;
-  activeLabel?: number;
+  activeLabel?: string | number;
   activeCoordinate?: { x: number; y: number };
 }
 
@@ -96,7 +96,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
 
   useEffect(() => { setDomain([0, durationMs]); }, [durationMs]);
 
-  const handleChartMouseMove = useCallback((state: ChartMouseState, event: React.MouseEvent) => {
+  const handleChartMouseMove = useCallback((state: ChartMouseState, event: React.MouseEvent<Element>) => {
     if (panRef.current) {
       setHover(null);
       const { startX, startDomain, innerWidth } = panRef.current;

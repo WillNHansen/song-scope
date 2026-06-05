@@ -122,7 +122,7 @@ export default function SongPage() {
               <p className="font-mono text-sm font-semibold text-peak">
                 {msToTimestamp(peakPoint.ms)}
               </p>
-              <p className="text-xs text-accent">{peakPoint.value.toFixed(1)}/10</p>
+              <p className="text-xs text-accent">{(peakPoint.value ?? 0).toFixed(1)}/10</p>
             </div>
           )}
         </div>

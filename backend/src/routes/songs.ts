@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { searchTracks, getTrack } from '../services/spotify';
 import { getSmoothedTimeline } from '../services/aggregation';
-import { optionalAuth, AuthRequest } from '../middleware/auth';
+import { requireAuth, optionalAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -25,8 +25,8 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Import a song from Spotify by its ID (upsert into DB)
-router.post('/import/:spotifyId', async (req: Request, res: Response): Promise<void> => {
+// Import a song from Spotify by its ID (upsert into DB) — auth required to prevent abuse
+router.post('/import/:spotifyId', requireAuth, async (req: Request, res: Response): Promise<void> => {
   const { spotifyId } = req.params;
 
   let song = await prisma.song.findUnique({ where: { spotifyId } });

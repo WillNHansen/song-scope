@@ -18,7 +18,20 @@ if (process.env.NODE_ENV === 'production') {
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: config.frontendUrl, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow non-browser requests
+    const allowed = [
+      config.frontendUrl,
+      /^https:\/\/song-scope[a-z0-9-]*\.vercel\.app$/,
+    ];
+    const ok = allowed.some((r) =>
+      typeof r === 'string' ? r === origin : r.test(origin)
+    );
+    callback(ok ? null : new Error('Not allowed by CORS'), ok);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // General rate limit

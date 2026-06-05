@@ -60,7 +60,6 @@ router.post('/song', requireAuth, async (req: AuthRequest, res: Response): Promi
     update: { rating },
   });
 
-  await recomputeAggregation(songId);
   res.json(result);
 });
 
@@ -74,7 +73,6 @@ router.delete('/song/:songId', requireAuth, async (req: AuthRequest, res: Respon
     res.status(404).json({ error: 'Rating not found' });
     return;
   }
-  await recomputeAggregation(songId);
   res.json({ success: true });
 });
 

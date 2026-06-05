@@ -19,6 +19,11 @@ export default function SongPage() {
   const [loading, setLoading] = useState(true);
   const [timelineTab, setTimelineTab] = useState<'community' | 'personal'>('community');
 
+  const personalTimeline = useMemo(
+    () => computePersonalTimeline(detail?.userIntervals ?? [], detail?.song.durationMs ?? 0),
+    [detail?.userIntervals, detail?.song.durationMs]
+  );
+
   const fetch = useCallback(async () => {
     const { data } = await api.get<SongDetail>(`/api/songs/${id}`);
     setDetail(data);
@@ -44,11 +49,6 @@ export default function SongPage() {
   }
 
   const { song, stats, timeline, userRating, userIntervals } = detail;
-
-  const personalTimeline = useMemo(
-    () => computePersonalTimeline(userIntervals, song.durationMs),
-    [userIntervals, song.durationMs]
-  );
 
   const peakPoint = timeline.length > 0
     ? timeline.reduce((max, p) => ((p.value ?? -1) > (max.value ?? -1) ? p : max), timeline[0])

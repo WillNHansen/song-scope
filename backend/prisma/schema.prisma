@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  username        String           @unique
+  passwordHash    String
+  bio             String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  songRatings          SongRating[]
+  intervalRatings      IntervalRating[]
+  passwordResetTokens  PasswordResetToken[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Song {
+  id                String             @id @default(cuid())
+  spotifyId         String             @unique
+  title             String
+  artist            String
+  album             String
+  albumArtUrl       String?
+  durationMs        Int
+  previewUrl        String?
+  popularity        Int?
+  releaseDate       String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  songRatings       SongRating[]
+  intervalRatings   IntervalRating[]
+  aggregatedMetrics AggregatedMetric[]
+
+  @@index([spotifyId])
+  @@index([title])
+  @@index([artist])
+}
+
+model SongRating {
+  id        String   @id @default(cuid())
+  userId    String
+  songId    String
+  rating    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([songId])
+  @@index([userId])
+}
+
+model IntervalRating {
+  id        String   @id @default(cuid())
+  userId    String
+  songId    String
+  startMs   Int
+  endMs     Int
+  rating    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
+  @@index([userId])
+  @@index([songId, startMs, endMs])
+}
+
+// Precomputed sentiment buckets for timeline visualization.
+// Rebuilt on-demand after new interval ratings arrive.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model AggregatedMetric {
+  id          String   @id @default(cuid())
+  songId      String
+  bucketMs    Int      // bucket start in ms
+  bucketSizeMs Int     // bucket width in ms (configurable, default 500)
+  avgRating   Float
+  ratingCount Int
+  updatedAt   DateTime @updatedAt
+  song        Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, bucketMs, bucketSizeMs])
+  @@index([songId, bucketSizeMs])
+}

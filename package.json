@@ -1,0 +1,13 @@
+{
+  "name": "songscope",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "db:up": "docker compose up -d postgres",
+    "db:setup": "cd backend && npm run db:generate && npm run db:push",
+    "setup": "npm run install:all && npm run db:up && sleep 3 && npm run db:setup"
+  }
+}

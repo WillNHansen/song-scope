@@ -17,6 +17,9 @@ if (process.env.NODE_ENV === 'production') {
 
 const app = express();
 
+// Trust Railway's proxy so rate limiting and IP detection work correctly
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {

@@ -9,7 +9,7 @@
 
 html {
   color-scheme: dark;
-  scrollbar-gutter: stable;
+  overflow-y: scroll;
 }
 
 body {

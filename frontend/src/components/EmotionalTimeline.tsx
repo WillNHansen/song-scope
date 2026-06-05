@@ -213,7 +213,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
       <div
         className="pointer-events-none absolute inset-0 rounded-xl"
         style={{
-          background: `radial-gradient(ellipse 30% 60% at ${(peak.ms / durationMs) * 100}% 100%, ${accentColor}1f 0%, transparent 70%)`,
+          background: `radial-gradient(ellipse 30% 60% at ${((peak.ms - domain[0]) / viewMs) * 100}% 100%, ${accentColor}1f 0%, transparent 70%)`,
         }}
       />
 

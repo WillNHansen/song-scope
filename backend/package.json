@@ -4,8 +4,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "prisma generate && tsc",
+    "start": "prisma migrate deploy && node dist/index.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -22,6 +22,7 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^8.0.10",
+    "prisma": "^5.9.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -31,7 +32,6 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.11.5",
     "@types/nodemailer": "^8.0.0",
-    "prisma": "^5.9.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

@@ -65,6 +65,25 @@ function clampDomain(start: number, end: number, durationMs: number): [number, n
   return [Math.round(s), Math.round(e)];
 }
 
+// Pick round interval ticks that fit nicely in the view
+function getNiceTicks(start: number, end: number): number[] {
+  const viewMs = end - start;
+  // Nice intervals in ms: 10s, 15s, 30s, 1m, 2m, 5m
+  const INTERVALS = [10000, 15000, 30000, 60000, 120000, 300000];
+  // Pick the coarsest interval that still gives at least 2 internal ticks,
+  // or the finest that gives at most 6
+  const interval = INTERVALS.find((i) => viewMs / i <= 6) ?? INTERVALS[INTERVALS.length - 1];
+  const minGap = interval * 0.25; // don't place a tick too close to start/end
+
+  const ticks: number[] = [start];
+  const first = Math.ceil(start / interval) * interval;
+  for (let t = first; t < end; t += interval) {
+    if (t - start >= minGap && end - t >= minGap) ticks.push(t);
+  }
+  ticks.push(end);
+  return ticks;
+}
+
 function CustomXAxisTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: number } }) {
   if (!payload) return null;
   return (
@@ -187,9 +206,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
   );
 
   const visibleData = filterToDomain(data, domain[0], domain[1]);
-  const xTicks = Array.from({ length: 5 }, (_, i) =>
-    Math.round(domain[0] + (i / 4) * viewMs)
-  );
+  const xTicks = getNiceTicks(domain[0], domain[1]);
 
   return (
     <div className="relative select-none">

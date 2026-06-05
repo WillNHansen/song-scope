@@ -45,7 +45,7 @@ export default function SongPage() {
   const { song, stats, timeline, userRating, userIntervals } = detail;
 
   const peakPoint = timeline.length > 0
-    ? timeline.reduce((max, p) => (p.value > max.value ? p : max), timeline[0])
+    ? timeline.reduce((max, p) => ((p.value ?? -1) > (max.value ?? -1) ? p : max), timeline[0])
     : null;
 
   return (

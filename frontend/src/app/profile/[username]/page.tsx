@@ -18,7 +18,7 @@ interface IntervalRating {
   startMs: number;
   endMs: number;
   updatedAt: string;
-  song: { id: string; title: string; artist: string; albumArtUrl: string | null };
+  song: { id: string; title: string; artist: string; albumArtUrl: string | null; durationMs: number };
 }
 
 interface ProfileData {
@@ -191,16 +191,19 @@ export default function ProfilePage() {
                         key={i}
                         className="flex items-center gap-3 rounded-lg bg-surface-2 px-3 py-2 text-sm"
                       >
-                        <span className="font-mono text-white/50">
+                        <span className="font-mono text-white/50 shrink-0">
                           {msToTimestamp(ir.startMs)} – {msToTimestamp(ir.endMs)}
                         </span>
-                        <div className="flex-1 rounded-full bg-white/5 h-1.5 overflow-hidden">
+                        <div className="flex-1 rounded-full bg-white/5 h-1.5 overflow-hidden relative">
                           <div
-                            className="h-full rounded-full bg-accent/60"
-                            style={{ width: `${(ir.rating / 10) * 100}%` }}
+                            className="absolute h-full rounded-full bg-accent/60"
+                            style={{
+                              left: `${(ir.startMs / song.durationMs) * 100}%`,
+                              width: `${((ir.endMs - ir.startMs) / song.durationMs) * 100}%`,
+                            }}
                           />
                         </div>
-                        <span className="font-bold text-accent">{ir.rating.toFixed(1)}</span>
+                        <span className="font-bold text-accent shrink-0">{ir.rating.toFixed(1)}</span>
                       </div>
                     ))}
                 </div>

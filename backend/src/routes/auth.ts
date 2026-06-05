@@ -115,7 +115,7 @@ router.get('/profile/:username', async (req: Request, res: Response): Promise<vo
           startMs: true,
           endMs: true,
           updatedAt: true,
-          song: { select: { id: true, title: true, artist: true, albumArtUrl: true } },
+          song: { select: { id: true, title: true, artist: true, albumArtUrl: true, durationMs: true } },
         },
       },
       _count: { select: { songRatings: true, intervalRatings: true } },

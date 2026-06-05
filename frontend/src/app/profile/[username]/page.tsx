@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+      <div className="mx-auto max-w-4xl px-4 py-20 text-center">
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
@@ -69,7 +69,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center text-white/50">
+      <div className="mx-auto max-w-4xl px-4 py-20 text-center text-white/50">
         User not found.
       </div>
     );
@@ -85,7 +85,7 @@ export default function ProfilePage() {
   }, {});
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
+    <div className="mx-auto max-w-4xl px-4 py-12">
       {/* Profile header */}
       <div className="mb-10 flex items-center gap-6">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-accent/40 to-peak/40 text-3xl font-bold text-white">

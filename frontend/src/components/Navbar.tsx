@@ -16,7 +16,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-surface/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 font-bold text-white">
           <Music2 size={22} className="text-accent" />
           <span className="tracking-tight">

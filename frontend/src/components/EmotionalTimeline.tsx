@@ -248,7 +248,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart
             data={visibleData}
-            margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
+            margin={{ top: 4, right: 32, bottom: 0, left: -24 }}
             onMouseMove={handleChartMouseMove}
             onMouseLeave={handleChartMouseLeave}
           >

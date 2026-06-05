@@ -170,12 +170,13 @@ export default function SongPage() {
         )}
 
         {timelineTab === 'personal' && (
-          <>
+          personalTimeline.length === 0 ? (
+            <div className="flex h-48 items-center justify-center rounded-xl border border-white/5 bg-surface-1">
+              <p className="text-sm text-white/30">No interval ratings yet — add some below to generate your personal map.</p>
+            </div>
+          ) : (
             <EmotionalTimeline data={personalTimeline} durationMs={song.durationMs} peakMs={personalPeak?.ms} variant="personal" />
-            {personalTimeline.length === 0 && (
-              <p className="mt-2 text-xs text-white/20">Add interval ratings below to generate your personal map.</p>
-            )}
-          </>
+          )
         )}
       </div>
 

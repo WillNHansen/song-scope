@@ -213,7 +213,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
       <div
         className="pointer-events-none absolute inset-0 rounded-xl"
         style={{
-          background: `radial-gradient(ellipse 30% 60% at ${(peak.ms / durationMs) * 100}% 100%, rgba(168,85,247,0.12) 0%, transparent 70%)`,
+          background: `radial-gradient(ellipse 30% 60% at ${(peak.ms / durationMs) * 100}% 100%, ${accentColor}1f 0%, transparent 70%)`,
         }}
       />
 
@@ -221,7 +221,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
         <span>Listener Sentiment</span>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-accent" />
+            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: accentColor }} />
             Peak at {msToTimestamp(peak.ms)} — {(peak.value ?? 0).toFixed(1)}/10
           </span>
           <div className="flex items-center gap-1">
@@ -340,16 +340,17 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
                 style={{ left: cursorX - 6, top: dotY - 6, backgroundColor: accentColor, boxShadow: `0 0 6px 2px ${accentColor}99` }}
               />
               <div
-                className="pointer-events-none absolute z-10 rounded-lg border border-purple-500/30 bg-surface-2/95 px-3 py-2 text-sm shadow-xl backdrop-blur"
+                className="pointer-events-none absolute z-10 rounded-lg bg-surface-2/95 px-3 py-2 text-sm shadow-xl backdrop-blur"
                 style={{
+                  border: `1px solid ${accentColor}4d`,
                   left: cursorX + 12,
                   top: Math.max(0, hover.mouseY - 40),
                   transform: cursorX > containerWidth - 160 ? 'translateX(-110%)' : undefined,
                 }}
               >
-                <p className="font-mono text-purple-300">{msToTimestamp(hover.ms)}</p>
+                <p className="font-mono" style={{ color: accentColor }}>{msToTimestamp(hover.ms)}</p>
                 <p className="mt-0.5 text-white">
-                  <span className="font-semibold text-accent">{hover.value.toFixed(2)}</span>
+                  <span className="font-semibold" style={{ color: accentColor }}>{hover.value.toFixed(2)}</span>
                   <span className="text-white/50"> / 10</span>
                 </p>
                 <p className="text-xs text-white/40">{hover.ratingCount} ratings</p>

@@ -142,8 +142,8 @@ export default function SongPage() {
           )}
         </div>
 
-        {/* Tabs — only show if logged in */}
-        {user && (
+        {/* Tabs — only show if logged in and user has interval ratings */}
+        {user && personalTimeline.length > 0 && (
           <div className="mb-4 flex gap-1 rounded-lg border border-white/5 bg-surface-2 p-1">
             <button
               onClick={() => setTimelineTab('community')}
@@ -169,7 +169,7 @@ export default function SongPage() {
           </>
         )}
 
-        {timelineTab === 'personal' && (
+        {timelineTab === 'personal' && personalTimeline.length > 0 && (
           personalTimeline.length === 0 ? (
             <div className="flex h-48 items-center justify-center rounded-xl border border-white/5 bg-surface-1">
               <p className="text-sm text-white/30">No interval ratings yet — add some below to generate your personal map.</p>

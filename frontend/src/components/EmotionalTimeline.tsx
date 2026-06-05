@@ -19,6 +19,7 @@ interface Props {
   data: TimelinePoint[];
   durationMs: number;
   peakMs?: number;
+  variant?: 'community' | 'personal';
 }
 
 const MIN_VIEW_MS = 2000;
@@ -79,7 +80,11 @@ interface ChartMouseState {
   activeCoordinate?: { x: number; y: number };
 }
 
-export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
+export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 'community' }: Props) {
+  const isPersonal = variant === 'personal';
+  const accentColor = isPersonal ? '#ef4444' : '#a855f7';
+  const gradientId = isPersonal ? 'personalGradient' : 'sentimentGradient';
+  const lineGradientId = isPersonal ? 'personalLineGradient' : 'lineGradient';
   const containerRef = useRef<HTMLDivElement>(null);
   const [domain, setDomain] = useState<[number, number]>([0, durationMs]);
   const [hover, setHover] = useState<{
@@ -236,10 +241,20 @@ export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
                 <stop offset="40%" stopColor="#a855f7" stopOpacity={0.3} />
                 <stop offset="100%" stopColor="#7c3aed" stopOpacity={0.05} />
               </linearGradient>
+              <linearGradient id="personalGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.5} />
+                <stop offset="40%" stopColor="#dc2626" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#991b1b" stopOpacity={0.05} />
+              </linearGradient>
               <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#a855f7" />
                 <stop offset="50%" stopColor="#d946ef" />
                 <stop offset="100%" stopColor="#a855f7" />
+              </linearGradient>
+              <linearGradient id="personalLineGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="50%" stopColor="#f87171" />
+                <stop offset="100%" stopColor="#ef4444" />
               </linearGradient>
               <filter id="glow">
                 <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -273,7 +288,7 @@ export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
             <Tooltip content={() => null} cursor={false} />
 
             {peak.ms >= domain[0] && peak.ms <= domain[1] && (
-              <ReferenceLine x={peak.ms} stroke="rgba(217,70,239,0.5)" strokeDasharray="4 4" ifOverflow="visible" />
+              <ReferenceLine x={peak.ms} stroke={isPersonal ? 'rgba(239,68,68,0.5)' : 'rgba(217,70,239,0.5)'} strokeDasharray="4 4" ifOverflow="visible" />
             )}
             {peakMs && peakMs !== peak.ms && peakMs >= domain[0] && peakMs <= domain[1] && (
               <ReferenceLine x={peakMs} stroke="rgba(168,85,247,0.3)" strokeDasharray="4 4" ifOverflow="visible" />
@@ -282,9 +297,9 @@ export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
             <Area
               type="monotone"
               dataKey="value"
-              stroke="#a855f7"
+              stroke={accentColor}
               strokeWidth={2}
-              fill="url(#sentimentGradient)"
+              fill={`url(#${gradientId})`}
               dot={false}
               activeDot={false}
               connectNulls={false}
@@ -301,11 +316,11 @@ export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
           const dotY = hover.plotTop + (1 - hover.value / 10) * hover.plotHeight;
           return (
             <>
-              <div className="pointer-events-none absolute top-0 w-px bg-accent/40" style={{ left: cursorX, height: 200 }} />
+              <div className="pointer-events-none absolute top-0 w-px" style={{ left: cursorX, height: 200, backgroundColor: `${accentColor}66` }} />
               {/* Dot snapped to the line */}
               <div
-                className="pointer-events-none absolute z-20 h-3 w-3 rounded-full border-2 border-white bg-accent shadow-[0_0_6px_2px_rgba(168,85,247,0.6)]"
-                style={{ left: cursorX - 6, top: dotY - 6 }}
+                className="pointer-events-none absolute z-20 h-3 w-3 rounded-full border-2 border-white"
+                style={{ left: cursorX - 6, top: dotY - 6, backgroundColor: accentColor, boxShadow: `0 0 6px 2px ${accentColor}99` }}
               />
               <div
                 className="pointer-events-none absolute z-10 rounded-lg border border-purple-500/30 bg-surface-2/95 px-3 py-2 text-sm shadow-xl backdrop-blur"
@@ -330,8 +345,8 @@ export default function EmotionalTimeline({ data, durationMs, peakMs }: Props) {
       {!isFullView && (
         <div className="mt-2 relative h-1 rounded-full bg-white/5">
           <div
-            className="absolute h-full rounded-full bg-accent/40"
-            style={{
+            className="absolute h-full rounded-full"
+            style={{ backgroundColor: `${accentColor}66`,
               left: `${(domain[0] / durationMs) * 100}%`,
               width: `${(viewMs / durationMs) * 100}%`,
             }}

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Clock, Users, BarChart2, Layers, Music } from 'lucide-react';
-import api, { msToTimestamp, formatRating } from '@/lib/api';
+import api, { msToTimestamp, formatRating, computePersonalTimeline } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
 import EmotionalTimeline from '@/components/EmotionalTimeline';
 import SongRatingWidget from '@/components/SongRatingWidget';
@@ -17,6 +17,7 @@ export default function SongPage() {
   const { user } = useAuthStore();
   const [detail, setDetail] = useState<SongDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [timelineTab, setTimelineTab] = useState<'community' | 'personal'>('community');
 
   const fetch = useCallback(async () => {
     const { data } = await api.get<SongDetail>(`/api/songs/${id}`);
@@ -44,8 +45,17 @@ export default function SongPage() {
 
   const { song, stats, timeline, userRating, userIntervals } = detail;
 
+  const personalTimeline = useMemo(
+    () => computePersonalTimeline(userIntervals, song.durationMs),
+    [userIntervals, song.durationMs]
+  );
+
   const peakPoint = timeline.length > 0
     ? timeline.reduce((max, p) => ((p.value ?? -1) > (max.value ?? -1) ? p : max), timeline[0])
+    : null;
+
+  const personalPeak = personalTimeline.length > 0
+    ? personalTimeline.filter(p => p.value !== null).reduce((max, p) => ((p.value ?? -1) > (max.value ?? -1) ? p : max), personalTimeline[0])
     : null;
 
   return (
@@ -109,34 +119,63 @@ export default function SongPage() {
 
       {/* Emotional Timeline — hero section */}
       <div className="mb-8 rounded-2xl border border-white/5 bg-surface-1 p-6">
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-4 flex items-start justify-between">
           <div>
             <h2 className="text-base font-bold text-white">Emotional Timeline</h2>
             <p className="mt-0.5 text-sm text-white/40">
-              Crowd-sourced listener sentiment across the track
+              {timelineTab === 'community' ? 'Crowd-sourced listener sentiment across the track' : 'Your personal sentiment map'}
             </p>
           </div>
-          {peakPoint && (
+          {timelineTab === 'community' && peakPoint && (
             <div className="text-right">
               <p className="text-xs text-white/30 uppercase tracking-wider">Peak moment</p>
-              <p className="font-mono text-sm font-semibold text-peak">
-                {msToTimestamp(peakPoint.ms)}
-              </p>
+              <p className="font-mono text-sm font-semibold text-peak">{msToTimestamp(peakPoint.ms)}</p>
               <p className="text-xs text-accent">{(peakPoint.value ?? 0).toFixed(1)}/10</p>
+            </div>
+          )}
+          {timelineTab === 'personal' && personalPeak && personalPeak.value !== null && (
+            <div className="text-right">
+              <p className="text-xs text-white/30 uppercase tracking-wider">Your peak</p>
+              <p className="font-mono text-sm font-semibold text-red-400">{msToTimestamp(personalPeak.ms)}</p>
+              <p className="text-xs text-red-400">{(personalPeak.value ?? 0).toFixed(1)}/10</p>
             </div>
           )}
         </div>
 
-        <EmotionalTimeline
-          data={timeline}
-          durationMs={song.durationMs}
-          peakMs={peakPoint?.ms}
-        />
+        {/* Tabs — only show if logged in */}
+        {user && (
+          <div className="mb-4 flex gap-1 rounded-lg border border-white/5 bg-surface-2 p-1">
+            <button
+              onClick={() => setTimelineTab('community')}
+              className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${timelineTab === 'community' ? 'bg-accent/20 text-accent' : 'text-white/40 hover:text-white/70'}`}
+            >
+              Community
+            </button>
+            <button
+              onClick={() => setTimelineTab('personal')}
+              className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${timelineTab === 'personal' ? 'bg-red-500/20 text-red-400' : 'text-white/40 hover:text-white/70'}`}
+            >
+              Yours
+            </button>
+          </div>
+        )}
 
-        {timeline.length === 0 && (
-          <p className="mt-2 text-xs text-white/20">
-            Add interval ratings below to generate the emotional map.
-          </p>
+        {timelineTab === 'community' && (
+          <>
+            <EmotionalTimeline data={timeline} durationMs={song.durationMs} peakMs={peakPoint?.ms} />
+            {timeline.length === 0 && (
+              <p className="mt-2 text-xs text-white/20">Add interval ratings below to generate the emotional map.</p>
+            )}
+          </>
+        )}
+
+        {timelineTab === 'personal' && (
+          <>
+            <EmotionalTimeline data={personalTimeline} durationMs={song.durationMs} peakMs={personalPeak?.ms} variant="personal" />
+            {personalTimeline.length === 0 && (
+              <p className="mt-2 text-xs text-white/20">Add interval ratings below to generate your personal map.</p>
+            )}
+          </>
         )}
       </div>
 

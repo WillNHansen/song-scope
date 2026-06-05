@@ -46,19 +46,16 @@ export async function recomputeAggregation(
     }
   }
 
+  // Delete all existing buckets first so removed intervals don't leave stale data
+  await prisma.aggregatedMetric.deleteMany({ where: { songId, bucketSizeMs } });
+
   await prisma.$transaction(
     Array.from(bucketMap.entries()).map(([bucketMs, { sum, count }]) =>
-      prisma.aggregatedMetric.upsert({
-        where: { songId_bucketMs_bucketSizeMs: { songId, bucketMs, bucketSizeMs } },
-        create: { songId, bucketMs, bucketSizeMs, avgRating: sum / count, ratingCount: count },
-        update: { avgRating: sum / count, ratingCount: count },
+      prisma.aggregatedMetric.create({
+        data: { songId, bucketMs, bucketSizeMs, avgRating: sum / count, ratingCount: count },
       })
     )
   );
-
-  await prisma.aggregatedMetric.deleteMany({
-    where: { songId, bucketSizeMs, bucketMs: { gt: maxMs } },
-  });
 }
 
 // Load precomputed buckets, smooth within contiguous segments only,

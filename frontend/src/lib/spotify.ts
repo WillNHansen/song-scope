@@ -28,7 +28,7 @@ export function isPlayerReady() {
 async function getFreshToken(): Promise<string | null> {
   if (cachedToken && Date.now() < tokenExpiresAt - 30_000) return cachedToken;
   try {
-    const { data } = await api.get<{ accessToken: string; expiresAt: string }>('/api/spotify/token');
+    const { data } = await api.get<{ accessToken: string; expiresAt: string }>('/api/auth/spotify/token');
     cachedToken = data.accessToken;
     tokenExpiresAt = new Date(data.expiresAt).getTime();
     return cachedToken;

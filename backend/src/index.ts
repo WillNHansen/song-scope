@@ -55,7 +55,7 @@ app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/auth', authRouter);
 app.use('/api/songs', songsRouter);
 app.use('/api/ratings', ratingsRouter);
-app.use('/api/spotify', spotifyRouter);
+app.use('/api/auth/spotify', spotifyRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 

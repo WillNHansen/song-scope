@@ -76,7 +76,7 @@ export default function Navbar() {
                 </span>
               ) : (
                 <a
-                  href={`${backendUrl}/api/spotify/connect`}
+                  href={`${backendUrl}/api/auth/spotify/connect`}
                   className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/50 transition hover:border-green-500/40 hover:text-green-400"
                 >
                   <SpotifyIcon size={13} />

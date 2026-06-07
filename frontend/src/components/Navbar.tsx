@@ -38,13 +38,12 @@ function SpotifyCallbackHandler() {
 }
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, hydrate } = useAuthStore();
   const router = useRouter();
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
   useEffect(() => {
-    if (user?.spotifyConnected) {
-      initSpotifyPlayer();
-    }
+    if (user?.spotifyConnected) initSpotifyPlayer();
   }, [user?.spotifyConnected]);
 
   function handleLogout() {
@@ -52,7 +51,13 @@ export default function Navbar() {
     router.push('/');
   }
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+  async function handleDisconnectSpotify() {
+    await fetch(`${backendUrl}/api/auth/spotify/disconnect`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    await hydrate(); // refresh user so spotifyConnected becomes false
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-surface/90 backdrop-blur">
@@ -71,10 +76,15 @@ export default function Navbar() {
           {user ? (
             <>
               {user.spotifyConnected ? (
-                <span className="flex items-center gap-1.5 text-xs text-green-400/70">
+                <button
+                  onClick={handleDisconnectSpotify}
+                  className="group flex items-center gap-1.5 rounded-lg border border-transparent px-3 py-1.5 text-xs text-green-400/70 transition hover:border-red-500/30 hover:text-red-400"
+                  title="Disconnect Spotify"
+                >
                   <SpotifyIcon size={13} />
-                  <span className="hidden sm:inline">Connected</span>
-                </span>
+                  <span className="hidden sm:inline group-hover:hidden">Connected</span>
+                  <span className="hidden sm:group-hover:inline">Disconnect</span>
+                </button>
               ) : (
                 <a
                   href={`${backendUrl}/api/auth/spotify/connect?token=${getToken()}`}

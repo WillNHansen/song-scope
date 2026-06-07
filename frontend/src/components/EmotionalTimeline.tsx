@@ -16,11 +16,11 @@ import { msToTimestamp } from '@/lib/api';
 import type { TimelinePoint } from '@/types';
 
 interface Props {
-  onSeek?: (ms: number) => void;
   data: TimelinePoint[];
   durationMs: number;
   peakMs?: number;
   variant?: 'community' | 'personal';
+  onSeek?: (ms: number) => void;
 }
 
 const MIN_VIEW_MS = 2000;
@@ -368,6 +368,9 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
                   <span className="text-white/50"> / 10</span>
                 </p>
                 <p className="text-xs text-white/40">{hover.ratingCount} ratings</p>
+                {onSeek && (
+                  <p className="mt-1 text-xs text-white/30">click to play</p>
+                )}
               </div>
             </>
           );

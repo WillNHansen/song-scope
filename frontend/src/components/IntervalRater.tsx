@@ -32,14 +32,15 @@ interface EditState {
 }
 
 export default function IntervalRater({ song, intervals, onUpdate }: Props) {
+  const [playerReady, setPlayerReady] = useState(false);
   const [startStr, setStartStr] = useState('');
   const [endStr, setEndStr] = useState('');
   const [rating, setRating] = useState(8);
+
+  useEffect(() => onPlayerReady(setPlayerReady), []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<EditState | null>(null);
-  const [playerReady, setPlayerReady] = useState(false);
-  useEffect(() => onPlayerReady(setPlayerReady), []);
 
   async function submit() {
     setError('');

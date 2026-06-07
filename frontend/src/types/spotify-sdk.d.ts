@@ -1,3 +1,4 @@
+// Minimal type declarations for the Spotify Web Playback SDK
 interface Window {
   Spotify: typeof Spotify;
   onSpotifyWebPlaybackSDKReady: () => void;
@@ -7,15 +8,12 @@ declare namespace Spotify {
   interface Player {
     connect(): Promise<boolean>;
     disconnect(): void;
-    activateElement(): Promise<void>;
     pause(): Promise<void>;
     resume(): Promise<void>;
     seek(positionMs: number): Promise<void>;
-    getCurrentState(): Promise<PlaybackState | null>;
     addListener(event: 'ready', cb: (data: { device_id: string }) => void): void;
     addListener(event: 'not_ready', cb: (data: { device_id: string }) => void): void;
     addListener(event: 'player_state_changed', cb: (state: PlaybackState | null) => void): void;
-    addListener(event: 'initialization_error' | 'authentication_error' | 'account_error' | 'playback_error', cb: (e: { message: string }) => void): void;
     addListener(event: string, cb: (...args: unknown[]) => void): void;
   }
 

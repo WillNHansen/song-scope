@@ -20,6 +20,7 @@ export default function SongPage() {
   const [loading, setLoading] = useState(true);
   const [timelineTab, setTimelineTab] = useState<'community' | 'personal'>('community');
   const [playerReady, setPlayerReady] = useState(false);
+
   useEffect(() => onPlayerReady(setPlayerReady), []);
 
   const personalTimeline = useMemo(

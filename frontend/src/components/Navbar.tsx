@@ -16,20 +16,20 @@ function SpotifyIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-// Isolated so useSearchParams is inside a Suspense boundary
+// Isolated component so useSearchParams is inside a Suspense boundary
 function SpotifyCallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { hydrate } = useAuthStore();
 
   useEffect(() => {
-    const param = searchParams.get('spotify');
-    if (param === 'connected') {
+    const spotifyParam = searchParams.get('spotify');
+    if (spotifyParam === 'connected') {
       hydrate().then(() => {
         initSpotifyPlayer();
         router.replace('/');
       });
-    } else if (param === 'error') {
+    } else if (spotifyParam === 'error') {
       router.replace('/');
     }
   }, [searchParams, hydrate, router]);
@@ -40,17 +40,19 @@ function SpotifyCallbackHandler() {
 export default function Navbar() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
-  // Init player on load if already connected
   useEffect(() => {
-    if (user?.spotifyConnected) initSpotifyPlayer();
+    if (user?.spotifyConnected) {
+      initSpotifyPlayer();
+    }
   }, [user?.spotifyConnected]);
 
   function handleLogout() {
     logout();
     router.push('/');
   }
+
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-surface/90 backdrop-blur">
@@ -82,6 +84,7 @@ export default function Navbar() {
                   <span className="hidden sm:inline">Connect Spotify</span>
                 </a>
               )}
+
               <Link
                 href={`/profile/${user.username}`}
                 className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-white/70 transition hover:bg-surface-2 hover:text-white"
@@ -98,10 +101,16 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="rounded-lg px-3 py-1.5 text-sm text-white/70 transition hover:text-white">
+              <Link
+                href="/auth/login"
+                className="rounded-lg px-3 py-1.5 text-sm text-white/70 transition hover:text-white"
+              >
                 Log in
               </Link>
-              <Link href="/auth/register" className="rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-accent/80">
+              <Link
+                href="/auth/register"
+                className="rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-accent/80"
+              >
                 Sign up
               </Link>
             </>

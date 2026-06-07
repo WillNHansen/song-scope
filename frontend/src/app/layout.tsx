@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-surface text-white">
         <AuthProvider>
           <Navbar />
-          <main>{children}</main>
+          <main className="pb-spotify">{children}</main>
           <SpotifyPlayer />
         </AuthProvider>
       </body>

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../config';
 import { requireAuth, AuthRequest } from '../middleware/auth';
@@ -10,16 +11,24 @@ const prisma = new PrismaClient();
 const SCOPES = 'streaming user-read-email user-read-private';
 
 // Step 1: redirect user to Spotify login
-router.get('/connect', requireAuth, (req: AuthRequest, res: Response) => {
-  const state = req.userId!; // embed userId in state so callback knows who to save to
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: config.spotify.clientId,
-    scope: SCOPES,
-    redirect_uri: config.spotify.redirectUri,
-    state,
-  });
-  res.redirect(`https://accounts.spotify.com/authorize?${params}`);
+// Accepts JWT as ?token= query param because this is a browser redirect (no auth header)
+router.get('/connect', (req: Request, res: Response): void => {
+  const token = req.query.token as string | undefined;
+  if (!token) { res.status(401).json({ error: 'Unauthorized' }); return; }
+  try {
+    const payload = jwt.verify(token, config.jwtSecret) as { userId: string };
+    const state = payload.userId;
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: config.spotify.clientId,
+      scope: SCOPES,
+      redirect_uri: config.spotify.redirectUri,
+      state,
+    });
+    res.redirect(`https://accounts.spotify.com/authorize?${params}`);
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
 });
 
 // Step 2: Spotify redirects back here with a code

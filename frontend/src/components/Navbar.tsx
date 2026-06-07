@@ -6,6 +6,7 @@ import { useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { Music2, User, LogOut } from 'lucide-react';
 import { initSpotifyPlayer } from '@/lib/spotify';
+import { getToken } from '@/lib/token';
 
 function SpotifyIcon({ size = 16 }: { size?: number }) {
   return (
@@ -76,7 +77,7 @@ export default function Navbar() {
                 </span>
               ) : (
                 <a
-                  href={`${backendUrl}/api/auth/spotify/connect`}
+                  href={`${backendUrl}/api/auth/spotify/connect?token=${getToken()}`}
                   className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/50 transition hover:border-green-500/40 hover:text-green-400"
                 >
                   <SpotifyIcon size={13} />

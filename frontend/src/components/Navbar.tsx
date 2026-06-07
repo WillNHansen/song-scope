@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { Music2, User, LogOut } from 'lucide-react';
 import { initSpotifyPlayer } from '@/lib/spotify';
 
-// Spotify logo SVG icon
 function SpotifyIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -16,19 +15,17 @@ function SpotifyIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export default function Navbar() {
-  const { user, hydrate } = useAuthStore();
-  const router = useRouter();
+// Isolated component so useSearchParams is inside a Suspense boundary
+function SpotifyCallbackHandler() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { hydrate } = useAuthStore();
 
-  // After Spotify OAuth redirect, re-hydrate auth so spotifyConnected updates
   useEffect(() => {
     const spotifyParam = searchParams.get('spotify');
     if (spotifyParam === 'connected') {
       hydrate().then(() => {
-        // Init player now that we're connected
         initSpotifyPlayer();
-        // Clean URL
         router.replace('/');
       });
     } else if (spotifyParam === 'error') {
@@ -36,14 +33,18 @@ export default function Navbar() {
     }
   }, [searchParams, hydrate, router]);
 
-  // Init player on mount if already connected
+  return null;
+}
+
+export default function Navbar() {
+  const { user, logout } = useAuthStore();
+  const router = useRouter();
+
   useEffect(() => {
     if (user?.spotifyConnected) {
       initSpotifyPlayer();
     }
   }, [user?.spotifyConnected]);
-
-  const { logout } = useAuthStore();
 
   function handleLogout() {
     logout();
@@ -54,6 +55,9 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-surface/90 backdrop-blur">
+      <Suspense fallback={null}>
+        <SpotifyCallbackHandler />
+      </Suspense>
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 font-bold text-white">
           <Music2 size={22} className="text-accent" />
@@ -65,7 +69,6 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              {/* Spotify connect/connected indicator */}
               {user.spotifyConnected ? (
                 <span className="flex items-center gap-1.5 text-xs text-green-400/70">
                   <SpotifyIcon size={13} />

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { Music2, User, LogOut } from 'lucide-react';
-import { initSpotifyPlayer } from '@/lib/spotify';
+import { initSpotifyPlayer, clearSpotifyCache } from '@/lib/spotify';
 import { getToken } from '@/lib/token';
 
 function SpotifyIcon({ size = 16 }: { size?: number }) {
@@ -52,6 +52,7 @@ export default function Navbar() {
   }
 
   async function handleDisconnectSpotify() {
+    clearSpotifyCache(); // clear in-memory token + disconnect SDK player
     await fetch(`${backendUrl}/api/auth/spotify/disconnect`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

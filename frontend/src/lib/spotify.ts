@@ -43,18 +43,15 @@ export async function initSpotifyPlayer(): Promise<void> {
   const token = await getFreshToken();
   if (!token) return;
 
-  // Load SDK script if not already loaded
+  // Load SDK script if not already loaded.
+  // MUST set onSpotifyWebPlaybackSDKReady BEFORE appending the script —
+  // the SDK fires it immediately on load.
   if (!window.Spotify) {
     await new Promise<void>((resolve) => {
+      window.onSpotifyWebPlaybackSDKReady = resolve;
       const script = document.createElement('script');
       script.src = 'https://sdk.scdn.co/spotify-player.js';
-      script.onload = () => resolve();
       document.head.appendChild(script);
-    });
-    // Wait for SDK to call window.onSpotifyWebPlaybackSDKReady
-    await new Promise<void>((resolve) => {
-      if (window.Spotify) return resolve();
-      window.onSpotifyWebPlaybackSDKReady = resolve;
     });
   }
 

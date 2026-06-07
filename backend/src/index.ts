@@ -6,6 +6,7 @@ import { config } from './config';
 import authRouter from './routes/auth';
 import songsRouter from './routes/songs';
 import ratingsRouter from './routes/ratings';
+import spotifyRouter from './routes/spotify';
 import { errorHandler } from './middleware/errorHandler';
 
 // Crash immediately in production if critical secrets are missing
@@ -52,6 +53,7 @@ app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
 app.use('/api/auth', authRouter);
+app.use('/api/auth/spotify', spotifyRouter);
 app.use('/api/songs', songsRouter);
 app.use('/api/ratings', ratingsRouter);
 

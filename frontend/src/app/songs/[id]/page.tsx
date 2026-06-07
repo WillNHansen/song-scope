@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Clock, Users, BarChart2, Layers, Music } from 'lucide-react';
 import api, { msToTimestamp, formatRating, computePersonalTimeline } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
-import { playTrackAt, onPlayerReady } from '@/lib/spotify';
 import EmotionalTimeline from '@/components/EmotionalTimeline';
 import SongRatingWidget from '@/components/SongRatingWidget';
 import IntervalRater from '@/components/IntervalRater';
@@ -19,9 +18,6 @@ export default function SongPage() {
   const [detail, setDetail] = useState<SongDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [timelineTab, setTimelineTab] = useState<'community' | 'personal'>('community');
-  const [playerReady, setPlayerReady] = useState(false);
-
-  useEffect(() => onPlayerReady(setPlayerReady), []);
 
   const personalTimeline = useMemo(
     () => computePersonalTimeline(detail?.userIntervals ?? [], detail?.song.durationMs ?? 0),
@@ -166,12 +162,7 @@ export default function SongPage() {
 
         {timelineTab === 'community' && (
           <>
-            <EmotionalTimeline
-            data={timeline}
-            durationMs={song.durationMs}
-            peakMs={peakPoint?.ms}
-            onSeek={playerReady ? (ms) => playTrackAt(song.spotifyId, ms) : undefined}
-          />
+            <EmotionalTimeline data={timeline} durationMs={song.durationMs} peakMs={peakPoint?.ms} />
             {timeline.length === 0 && (
               <p className="mt-2 text-xs text-white/20">Add interval ratings below to generate the emotional map.</p>
             )}
@@ -184,13 +175,7 @@ export default function SongPage() {
               <p className="text-sm text-white/30">No interval ratings yet — add some below to generate your personal map.</p>
             </div>
           ) : (
-            <EmotionalTimeline
-              data={personalTimeline}
-              durationMs={song.durationMs}
-              peakMs={personalPeak?.ms}
-              variant="personal"
-              onSeek={playerReady ? (ms) => playTrackAt(song.spotifyId, ms) : undefined}
-            />
+            <EmotionalTimeline data={personalTimeline} durationMs={song.durationMs} peakMs={personalPeak?.ms} variant="personal" />
           )
         )}
       </div>

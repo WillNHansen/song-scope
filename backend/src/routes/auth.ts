@@ -80,7 +80,6 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
       username: true,
       bio: true,
       createdAt: true,
-      spotifyAccessToken: true,
       _count: { select: { songRatings: true, intervalRatings: true } },
     },
   });
@@ -88,8 +87,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
     res.status(404).json({ error: 'User not found' });
     return;
   }
-  const { spotifyAccessToken, ...rest } = user;
-  res.json({ ...rest, spotifyConnected: !!spotifyAccessToken });
+  res.json(user);
 });
 
 router.get('/profile/:username', async (req: Request, res: Response): Promise<void> => {

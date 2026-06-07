@@ -95,14 +95,22 @@ export async function playTrackAt(spotifyId: string, positionMs: number): Promis
   const uri = `spotify:track:${spotifyId}`;
 
   // Attempt play; if 404, wait 1s for device to fully register then retry once
-  // Retry up to 5 times with 1s gaps — device can take several seconds to propagate
+  // Transfer playback to our device first — this reactivates it if Spotify
+  // has marked it inactive, and is a no-op if it's already active.
+  await fetch('https://api.spotify.com/v1/me/player', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device_ids: [deviceId], play: false }),
+  });
+
+  // Retry up to 5 times — first play after transfer can still take a moment
   for (let attempt = 1; attempt <= 5; attempt++) {
     const res = await spotifyFetch(
       `/me/player/play?device_id=${deviceId}`,
       token,
       { uris: [uri], position_ms: positionMs }
     );
-    if (res.ok || res.status === 204) return; // success
+    if (res.ok || res.status === 204) return;
     if (res.status !== 404) {
       const err = await res.json().catch(() => ({}));
       console.error('[Spotify] play failed:', res.status, err);

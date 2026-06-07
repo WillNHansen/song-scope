@@ -8,7 +8,7 @@ import { requireAuth, AuthRequest } from '../middleware/auth';
 const router = Router();
 const prisma = new PrismaClient();
 
-const SCOPES = 'streaming user-read-email user-read-private';
+const SCOPES = 'streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state';
 
 // Step 1: redirect user to Spotify login
 // Accepts JWT as ?token= query param because this is a browser redirect (no auth header)

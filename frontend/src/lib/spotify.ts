@@ -45,16 +45,13 @@ export async function initSpotifyPlayer(): Promise<void> {
 
   // Load SDK script if not already loaded
   if (!window.Spotify) {
+    // IMPORTANT: set the callback BEFORE adding the script tag —
+    // the SDK fires window.onSpotifyWebPlaybackSDKReady the moment it loads.
     await new Promise<void>((resolve) => {
+      window.onSpotifyWebPlaybackSDKReady = resolve;
       const script = document.createElement('script');
       script.src = 'https://sdk.scdn.co/spotify-player.js';
-      script.onload = () => resolve();
       document.head.appendChild(script);
-    });
-    // Wait for SDK to call window.onSpotifyWebPlaybackSDKReady
-    await new Promise<void>((resolve) => {
-      if (window.Spotify) return resolve();
-      window.onSpotifyWebPlaybackSDKReady = resolve;
     });
   }
 
@@ -68,20 +65,27 @@ export async function initSpotifyPlayer(): Promise<void> {
   });
 
   player.addListener('ready', ({ device_id }) => {
+    console.log('[SongScope] Spotify player ready, device:', device_id);
     deviceId = device_id;
     notifyReady(true);
   });
 
-  player.addListener('not_ready', () => {
+  player.addListener('not_ready', ({ device_id }) => {
+    console.warn('[SongScope] Spotify player not ready, device:', device_id);
     deviceId = null;
     notifyReady(false);
   });
 
   player.addListener('player_state_changed', (state) => {
     if (!state) return;
-    // update currentSpotifyId from what's playing
     currentSpotifyId = state.track_window.current_track.id;
   });
+
+  // Log any SDK errors
+  player.addListener('initialization_error', (e) => console.error('[Spotify] init error:', e));
+  player.addListener('authentication_error', (e) => console.error('[Spotify] auth error:', e));
+  player.addListener('account_error', (e) => console.error('[Spotify] account error (Premium required?):', e));
+  player.addListener('playback_error', (e) => console.error('[Spotify] playback error:', e));
 
   player.connect();
 }

@@ -7,6 +7,7 @@ declare namespace Spotify {
   interface Player {
     connect(): Promise<boolean>;
     disconnect(): void;
+    activateElement(): Promise<void>;
     pause(): Promise<void>;
     resume(): Promise<void>;
     seek(positionMs: number): Promise<void>;

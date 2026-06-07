@@ -88,7 +88,13 @@ async function spotifyFetch(path: string, token: string, body?: object) {
 }
 
 export async function playTrackAt(spotifyId: string, positionMs: number): Promise<void> {
-  if (!deviceId) { console.warn('[SongScope] No device ready'); return; }
+  if (!deviceId || !player) { console.warn('[SongScope] No device ready'); return; }
+
+  // Must be called during a user gesture to unlock the Web Audio context.
+  // Without this, the SDK reports ready but Spotify's backend never fully
+  // registers the device, causing 404s on all REST API calls.
+  await player.activateElement();
+
   const token = await getFreshToken();
   if (!token) return;
 

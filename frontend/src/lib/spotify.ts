@@ -93,15 +93,12 @@ export async function playTrackAt(spotifyId: string, positionMs: number): Promis
   const token = await getFreshToken();
   if (!token) { console.error('[SongScope] No token available'); return; }
 
-  console.log('[SongScope] Playing', spotifyId, 'at', positionMs, 'on device', deviceId);
+  // activateElement() unlocks the browser's Web Audio context — must be called
+  // during a user gesture. Without this Chrome won't fully register the device
+  // with Spotify's backend, causing "Device not found" on all play calls.
+  try { await player!.activateElement(); } catch { /* not critical */ }
 
-  // Transfer playback to our device first (reactivates it if idle)
-  const transfer = await fetch('https://api.spotify.com/v1/me/player', {
-    method: 'PUT',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ device_ids: [deviceId], play: false }),
-  });
-  console.log('[SongScope] Transfer status:', transfer.status);
+  console.log('[SongScope] Playing', spotifyId, 'at', positionMs, 'on device', deviceId);
 
   // Play the track at the given position, retry up to 5× if device not yet ready
   for (let attempt = 1; attempt <= 5; attempt++) {

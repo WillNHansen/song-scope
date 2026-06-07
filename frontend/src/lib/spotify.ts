@@ -95,24 +95,23 @@ export async function playTrackAt(spotifyId: string, positionMs: number): Promis
   const uri = `spotify:track:${spotifyId}`;
 
   // Attempt play; if 404, wait 1s for device to fully register then retry once
-  const attempt = async () => spotifyFetch(
-    `/me/player/play?device_id=${deviceId}`,
-    token,
-    { uris: [uri], position_ms: positionMs }
-  );
-
-  let res = await attempt();
-
-  if (res.status === 404) {
-    console.log('[SongScope] Device not ready yet, retrying in 1s…');
+  // Retry up to 5 times with 1s gaps — device can take several seconds to propagate
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const res = await spotifyFetch(
+      `/me/player/play?device_id=${deviceId}`,
+      token,
+      { uris: [uri], position_ms: positionMs }
+    );
+    if (res.ok || res.status === 204) return; // success
+    if (res.status !== 404) {
+      const err = await res.json().catch(() => ({}));
+      console.error('[Spotify] play failed:', res.status, err);
+      return;
+    }
+    console.log(`[SongScope] Device not ready yet (attempt ${attempt}/5), retrying in 1s…`);
     await new Promise((r) => setTimeout(r, 1000));
-    res = await attempt();
   }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error('[Spotify] play failed:', res.status, err);
-  }
+  console.error('[Spotify] Device never became available after 5 attempts');
 }
 
 export async function pausePlayer() { player?.pause(); }

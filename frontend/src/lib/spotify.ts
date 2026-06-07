@@ -91,26 +91,28 @@ export async function playTrackAt(spotifyId: string, positionMs: number): Promis
   const token = await getFreshToken();
   if (!token) return;
 
+  // Always transfer playback to our device first — this makes SongScope
+  // the active device even if something else is playing on another client.
+  await fetch('https://api.spotify.com/v1/me/player', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device_ids: [deviceId], play: false }),
+  });
+
   const uri = `spotify:track:${spotifyId}`;
 
-  if (currentSpotifyId === spotifyId) {
-    // Already loaded — just seek
-    await fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${positionMs}&device_id=${deviceId}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  } else {
-    // Load new track and seek
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uris: [uri], position_ms: positionMs }),
-    });
+  // Load track at position (works whether or not it was already loaded)
+  const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uris: [uri], position_ms: positionMs }),
+  });
+
+  if (res.ok) {
     currentSpotifyId = spotifyId;
+  } else {
+    const err = await res.json().catch(() => ({}));
+    console.error('Spotify play error:', res.status, err);
   }
 }
 

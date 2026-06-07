@@ -20,7 +20,6 @@ interface Props {
   durationMs: number;
   peakMs?: number;
   variant?: 'community' | 'personal';
-  onSeek?: (ms: number) => void;
 }
 
 const MIN_VIEW_MS = 2000;
@@ -100,7 +99,7 @@ interface ChartMouseState {
   activeCoordinate?: { x: number; y: number };
 }
 
-export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 'community', onSeek }: Props) {
+export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 'community' }: Props) {
   const isPersonal = variant === 'personal';
   const accentColor = isPersonal ? '#ef4444' : '#a855f7';
   const gradientId = isPersonal ? 'personalGradient' : 'sentimentGradient';
@@ -179,18 +178,6 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
   const handleMouseUp = useCallback(() => { panRef.current = null; }, []);
   const handleMouseLeave = useCallback(() => { panRef.current = null; setHover(null); }, []);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    if (!onSeek) return;
-    const svg = containerRef.current?.querySelector('svg');
-    const plotArea = svg?.querySelector('.recharts-cartesian-grid') as SVGElement | null;
-    const plotRect = plotArea?.getBoundingClientRect();
-    if (!plotRect) return;
-    const relX = e.clientX - plotRect.left;
-    if (relX < 0 || relX > plotRect.width) return;
-    const ms = Math.round(domain[0] + (relX / plotRect.width) * (domain[1] - domain[0]));
-    onSeek(ms);
-  }, [onSeek, domain]);
-
 
   const zoomIn = useCallback(() => {
     const mid = (domain[0] + domain[1]) / 2;
@@ -257,7 +244,6 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
       >
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart
@@ -368,9 +354,6 @@ export default function EmotionalTimeline({ data, durationMs, peakMs, variant = 
                   <span className="text-white/50"> / 10</span>
                 </p>
                 <p className="text-xs text-white/40">{hover.ratingCount} ratings</p>
-                {onSeek && (
-                  <p className="mt-1 text-xs text-white/30">click to play</p>
-                )}
               </div>
             </>
           );

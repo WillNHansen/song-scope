@@ -24,6 +24,11 @@ body {
 }
 
 
+/* Bottom padding when Spotify player is visible */
+.pb-spotify {
+  padding-bottom: 0;
+}
+
 /* Range input styling */
 input[type='range'] {
   -webkit-appearance: none;

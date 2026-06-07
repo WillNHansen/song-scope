@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Trash2, Clock, Pencil, Check, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, Clock, Pencil, Check, X, Play } from 'lucide-react';
 import api, { msToTimestamp } from '@/lib/api';
+import { playTrackAt, onPlayerReady } from '@/lib/spotify';
 import type { IntervalRating, Song } from '@/types';
 
 interface Props {
@@ -31,9 +32,12 @@ interface EditState {
 }
 
 export default function IntervalRater({ song, intervals, onUpdate }: Props) {
+  const [playerReady, setPlayerReady] = useState(false);
   const [startStr, setStartStr] = useState('');
   const [endStr, setEndStr] = useState('');
   const [rating, setRating] = useState(8);
+
+  useEffect(() => onPlayerReady(setPlayerReady), []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<EditState | null>(null);
@@ -237,6 +241,15 @@ export default function IntervalRater({ song, intervals, onUpdate }: Props) {
                 className="flex items-center justify-between rounded-lg border border-white/5 bg-surface-1 px-4 py-3"
               >
                 <div className="flex items-center gap-3">
+                  {playerReady && (
+                    <button
+                      onClick={() => playTrackAt(song.spotifyId, iv.startMs)}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/20 text-green-400 transition hover:bg-green-500/30"
+                      title="Play from here"
+                    >
+                      <Play size={10} fill="currentColor" />
+                    </button>
+                  )}
                   <Clock size={14} className="text-accent/60" />
                   <span className="font-mono text-sm text-white/70">
                     {msToTimestamp(iv.startMs)} – {msToTimestamp(iv.endMs)}

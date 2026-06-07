@@ -4,6 +4,7 @@ export interface User {
   username: string;
   bio?: string;
   createdAt: string;
+  spotifyConnected?: boolean;
 }
 
 export interface Song {

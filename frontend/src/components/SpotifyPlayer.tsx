@@ -9,14 +9,15 @@ export default function SpotifyPlayer() {
   const { user } = useAuthStore();
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<Spotify.PlaybackState | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Local position counter so we can interpolate between SDK polls
+  const [localPositionMs, setLocalPositionMs] = useState(0);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastStateRef = useRef<Spotify.PlaybackState | null>(null);
 
   useEffect(() => {
     if (!user?.spotifyConnected) return;
-
     initSpotifyPlayer();
-    const unsub = onPlayerReady(setReady);
-    return unsub;
+    return onPlayerReady(setReady);
   }, [user?.spotifyConnected]);
 
   useEffect(() => {
@@ -24,29 +25,48 @@ export default function SpotifyPlayer() {
     const player = getPlayer();
     if (!player) return;
 
+    // Listen for state changes (play/pause/track/seek events)
     player.addListener('player_state_changed', (s) => {
+      lastStateRef.current = s;
       setState(s);
+      if (s) setLocalPositionMs(s.position);
     });
 
-    // Poll for position updates while playing
-    intervalRef.current = setInterval(async () => {
-      // Re-fetch state to get updated position
+    // Poll every 500ms for current state to get accurate position while playing
+    tickRef.current = setInterval(async () => {
       const p = getPlayer();
       if (!p) return;
+      const s = await p.getCurrentState();
+      if (!s) return;
+      lastStateRef.current = s;
+      setState(s);
+      setLocalPositionMs(s.position);
     }, 500);
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (tickRef.current) clearInterval(tickRef.current);
     };
   }, [ready]);
+
+  // Interpolate position between polls for smooth display
+  useEffect(() => {
+    if (!state || state.paused) return;
+    const start = Date.now();
+    const base = localPositionMs;
+    const frame = requestAnimationFrame(function tick() {
+      setLocalPositionMs(base + (Date.now() - start));
+      requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.paused, state?.track_window.current_track.id]);
 
   if (!user?.spotifyConnected || !ready || !state) return null;
 
   const track = state.track_window.current_track;
   const albumArt = track.album.images[0]?.url;
-  const positionMs = state.position;
-  const durationMs = state.duration;
-  const pct = durationMs > 0 ? (positionMs / durationMs) * 100 : 0;
+  const positionMs = Math.min(localPositionMs, state.duration);
+  const pct = state.duration > 0 ? (positionMs / state.duration) * 100 : 0;
 
   function fmt(ms: number) {
     const s = Math.floor(ms / 1000);
@@ -85,11 +105,11 @@ export default function SpotifyPlayer() {
         {/* Progress */}
         <div className="hidden w-36 sm:block">
           <div className="mb-1 h-1 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+            <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
           </div>
           <div className="flex justify-between text-[10px] text-white/30">
             <span>{fmt(positionMs)}</span>
-            <span>{fmt(durationMs)}</span>
+            <span>{fmt(state.duration)}</span>
           </div>
         </div>
       </div>
